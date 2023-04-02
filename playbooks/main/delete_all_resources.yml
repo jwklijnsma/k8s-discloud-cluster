@@ -1,0 +1,45 @@
+---
+- hosts: proxmox_server
+  gather_facts: False
+  vars:
+    id_list:
+        - "{{ k8s_master01_id }}"
+        - "{{ k8s_master02_id }}"
+        - "{{ k8s_master03_id }}"
+        - "{{ k8s_node1_id }}"
+        - "{{ k8s_node2_id }}"
+        - "{{ k8s_node3_id }}"
+        - "{{ k8s_node4_id }}"
+        - "{{ k8s_node5_id }}"
+        - "{{ k8s_node6_id }}"
+        - "{{ k8s_node7_id }}"
+        - "{{ k8s_node8_id }}"
+        - "{{ k8s_node9_id }}"
+        - "{{ k8s_node10_id }}"
+        - "{{ k8s_node11_id }}"
+        - "{{ k8s_node12_id }}"
+        - "{{ k8s_node13_id }}"
+  tasks:
+      - name: Including the variables.
+        include_vars:
+            file: ../../vars.yml
+
+      - name: Stopping the VMs.
+        shell: qm stop {{ item }}
+        with_items: "{{ id_list }}"
+        ignore_errors: yes
+
+      - name: Destroying the VMs.
+        shell: qm destroy {{ item }}
+        with_items: "{{ id_list }}"
+        ignore_errors: yes
+
+      - name: Deleting the Resource Pool.
+        shell: pvesh delete /pools/{{ k8s_resource_pool }}
+        ignore_errors: yes
+
+      - name: Deleting the Debian qcow2 image.
+        file:
+            path: "/tmp/image.qcow2"
+            state: absent
+        ignore_errors: yes

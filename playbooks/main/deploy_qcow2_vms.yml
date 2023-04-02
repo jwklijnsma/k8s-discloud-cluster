@@ -1,0 +1,179 @@
+---
+- hosts: proxmox_server
+  gather_facts: False
+  vars:
+    id_list:
+        - "{{ k8s_master01_id }}"
+        - "{{ k8s_master02_id }}"
+        - "{{ k8s_master03_id }}"
+        - "{{ k8s_node1_id }}"
+        - "{{ k8s_node2_id }}"
+        - "{{ k8s_node3_id }}"
+        - "{{ k8s_node4_id }}"
+        - "{{ k8s_node5_id }}"
+        - "{{ k8s_node6_id }}"
+        - "{{ k8s_node7_id }}"
+        - "{{ k8s_node8_id }}"
+        - "{{ k8s_node9_id }}"
+        - "{{ k8s_node10_id }}"
+        - "{{ k8s_node11_id }}"
+        - "{{ k8s_node12_id }}"
+        - "{{ k8s_node13_id }}"
+
+    id_stg_list:
+        - { id: "{{ k8s_master01_id }}", stg: "{{ k8s_master01_stg }}" }
+        - { id: "{{ k8s_master02_id }}", stg: "{{ k8s_master02_stg }}" }
+        - { id: "{{ k8s_master03_id }}", stg: "{{ k8s_master03_stg }}" }
+        - { id: "{{ k8s_node1_id }}", stg: "{{ k8s_node1_stg }}" }
+        - { id: "{{ k8s_node2_id }}", stg: "{{ k8s_node2_stg }}" }
+        - { id: "{{ k8s_node3_id }}", stg: "{{ k8s_node3_stg }}" }
+        - { id: "{{ k8s_node4_id }}", stg: "{{ k8s_node4_stg }}" }
+        - { id: "{{ k8s_node5_id }}", stg: "{{ k8s_node5_stg }}" }
+        - { id: "{{ k8s_node6_id }}", stg: "{{ k8s_node6_stg }}" }
+        - { id: "{{ k8s_node7_id }}", stg: "{{ k8s_node7_stg }}" }
+        - { id: "{{ k8s_node8_id }}", stg: "{{ k8s_node8_stg }}" }
+        - { id: "{{ k8s_node9_id }}", stg: "{{ k8s_node9_stg }}" }
+        - { id: "{{ k8s_node10_id }}", stg: "{{ k8s_node10_stg }}" }
+        - { id: "{{ k8s_node11_id }}", stg: "{{ k8s_node11_stg }}" }
+        - { id: "{{ k8s_node12_id }}", stg: "{{ k8s_node12_stg }}" }
+        - { id: "{{ k8s_node13_id }}", stg: "{{ k8s_node13_stg }}" }
+
+  tasks:
+      - name: Including the variables.
+        include_vars:
+            file: ../../vars.yml
+
+      - name: Creating a resource pool.
+        shell: pvesh create /pools -poolid "{{ k8s_resource_pool }}" --Comment "Kubernetes Cluster"
+        ignore_errors: yes
+
+      - name: Downloading the Debian qcow2 image.
+        get_url:
+            url: "{{ qcow2_image }}"
+            dest: "{{ qcow2_download_location }}image.qcow2"
+
+      - name: Creating the VMs.
+        shell: >
+            qm create {{ item.id }}
+            --pool {{ k8s_resource_pool }}
+            --ostype "l26"
+            --name {{ item.hn }}
+            --description "Kubernetes VM"
+            --agent 1
+            --cores {{ item.cpu }}
+            --memory {{ item.mem }}
+            --net0 "virtio,bridge={{ item.bridge }}"
+            --ipconfig0 "gw={{ item.gw }},ip={{ item.ip }}{{ item.sn }}"
+            --nameserver {{ item.ns }}
+            --searchdomain {{ item.sd }}
+            --sshkeys {{ k8s_ssh_key }}
+
+        with_items:
+            - { id: "{{ k8s_master01_id }}", hn: "{{ k8s_master01_hn }}", cpu: "{{ k8s_master01_cpu }}", mem: "{{ k8s_master01_mem }}", bridge: "{{ k8s_master01_bridge }}", gw: "{{ k8s_master01_gw }}", ip: "{{ k8s_master01_ip }}", sn: "{{ k8s_master01_sn }}", ns: "{{ k8s_master01_ns }}", sd: "{{ k8s_master01_sd }}" }
+            - { id: "{{ k8s_master02_id }}", hn: "{{ k8s_master02_hn }}", cpu: "{{ k8s_master02_cpu }}", mem: "{{ k8s_master02_mem }}", bridge: "{{ k8s_master02_bridge }}", gw: "{{ k8s_master02_gw }}", ip: "{{ k8s_master02_ip }}", sn: "{{ k8s_master02_sn }}", ns: "{{ k8s_master02_ns }}", sd: "{{ k8s_master02_sd }}" }
+            - { id: "{{ k8s_master03_id }}", hn: "{{ k8s_master03_hn }}", cpu: "{{ k8s_master03_cpu }}", mem: "{{ k8s_master03_mem }}", bridge: "{{ k8s_master03_bridge }}", gw: "{{ k8s_master03_gw }}", ip: "{{ k8s_master03_ip }}", sn: "{{ k8s_master03_sn }}", ns: "{{ k8s_master03_ns }}", sd: "{{ k8s_master03_sd }}" }
+            - { id: "{{ k8s_node1_id }}", hn: "{{ k8s_node1_hn }}", cpu: "{{ k8s_node1_cpu }}", mem: "{{ k8s_node1_mem }}", bridge: "{{ k8s_node1_bridge }}", gw: "{{ k8s_node1_gw }}", ip: "{{ k8s_node1_ip }}", sn: "{{ k8s_node1_sn }}", ns: "{{ k8s_node1_ns }}", sd: "{{ k8s_node1_sd }}" }
+            - { id: "{{ k8s_node2_id }}", hn: "{{ k8s_node2_hn }}", cpu: "{{ k8s_node2_cpu }}", mem: "{{ k8s_node2_mem }}", bridge: "{{ k8s_node2_bridge }}", gw: "{{ k8s_node2_gw }}", ip: "{{ k8s_node2_ip }}", sn: "{{ k8s_node2_sn }}", ns: "{{ k8s_node2_ns }}", sd: "{{ k8s_node2_sd }}" }
+            - { id: "{{ k8s_node3_id }}", hn: "{{ k8s_node3_hn }}", cpu: "{{ k8s_node3_cpu }}", mem: "{{ k8s_node3_mem }}", bridge: "{{ k8s_node3_bridge }}", gw: "{{ k8s_node3_gw }}", ip: "{{ k8s_node3_ip }}", sn: "{{ k8s_node3_sn }}", ns: "{{ k8s_node3_ns }}", sd: "{{ k8s_node3_sd }}" }
+            - { id: "{{ k8s_node4_id }}", hn: "{{ k8s_node4_hn }}", cpu: "{{ k8s_node4_cpu }}", mem: "{{ k8s_node4_mem }}", bridge: "{{ k8s_node4_bridge }}", gw: "{{ k8s_node4_gw }}", ip: "{{ k8s_node4_ip }}", sn: "{{ k8s_node4_sn }}", ns: "{{ k8s_node4_ns }}", sd: "{{ k8s_node4_sd }}" }
+            - { id: "{{ k8s_node5_id }}", hn: "{{ k8s_node5_hn }}", cpu: "{{ k8s_node5_cpu }}", mem: "{{ k8s_node5_mem }}", bridge: "{{ k8s_node5_bridge }}", gw: "{{ k8s_node5_gw }}", ip: "{{ k8s_node5_ip }}", sn: "{{ k8s_node5_sn }}", ns: "{{ k8s_node5_ns }}", sd: "{{ k8s_node5_sd }}" }
+            - { id: "{{ k8s_node6_id }}", hn: "{{ k8s_node6_hn }}", cpu: "{{ k8s_node6_cpu }}", mem: "{{ k8s_node6_mem }}", bridge: "{{ k8s_node6_bridge }}", gw: "{{ k8s_node6_gw }}", ip: "{{ k8s_node6_ip }}", sn: "{{ k8s_node6_sn }}", ns: "{{ k8s_node6_ns }}", sd: "{{ k8s_node6_sd }}" }
+            - { id: "{{ k8s_node7_id }}", hn: "{{ k8s_node7_hn }}", cpu: "{{ k8s_node7_cpu }}", mem: "{{ k8s_node7_mem }}", bridge: "{{ k8s_node7_bridge }}", gw: "{{ k8s_node7_gw }}", ip: "{{ k8s_node7_ip }}", sn: "{{ k8s_node7_sn }}", ns: "{{ k8s_node7_ns }}", sd: "{{ k8s_node7_sd }}" }
+            - { id: "{{ k8s_node8_id }}", hn: "{{ k8s_node8_hn }}", cpu: "{{ k8s_node8_cpu }}", mem: "{{ k8s_node8_mem }}", bridge: "{{ k8s_node8_bridge }}", gw: "{{ k8s_node8_gw }}", ip: "{{ k8s_node8_ip }}", sn: "{{ k8s_node8_sn }}", ns: "{{ k8s_node8_ns }}", sd: "{{ k8s_node8_sd }}" }
+            - { id: "{{ k8s_node9_id }}", hn: "{{ k8s_node9_hn }}", cpu: "{{ k8s_node9_cpu }}", mem: "{{ k8s_node9_mem }}", bridge: "{{ k8s_node9_bridge }}", gw: "{{ k8s_node9_gw }}", ip: "{{ k8s_node9_ip }}", sn: "{{ k8s_node9_sn }}", ns: "{{ k8s_node9_ns }}", sd: "{{ k8s_node9_sd }}" }
+            - { id: "{{ k8s_node10_id }}", hn: "{{ k8s_node10_hn }}", cpu: "{{ k8s_node10_cpu }}", mem: "{{ k8s_node10_mem }}", bridge: "{{ k8s_node10_bridge }}", gw: "{{ k8s_node10_gw }}", ip: "{{ k8s_node10_ip }}", sn: "{{ k8s_node10_sn }}", ns: "{{ k8s_node10_ns }}", sd: "{{ k8s_node10_sd }}" }
+            - { id: "{{ k8s_node11_id }}", hn: "{{ k8s_node11_hn }}", cpu: "{{ k8s_node11_cpu }}", mem: "{{ k8s_node11_mem }}", bridge: "{{ k8s_node11_bridge }}", gw: "{{ k8s_node11_gw }}", ip: "{{ k8s_node11_ip }}", sn: "{{ k8s_node11_sn }}", ns: "{{ k8s_node11_ns }}", sd: "{{ k8s_node11_sd }}" }
+            - { id: "{{ k8s_node12_id }}", hn: "{{ k8s_node12_hn }}", cpu: "{{ k8s_node12_cpu }}", mem: "{{ k8s_node12_mem }}", bridge: "{{ k8s_node12_bridge }}", gw: "{{ k8s_node12_gw }}", ip: "{{ k8s_node12_ip }}", sn: "{{ k8s_node12_sn }}", ns: "{{ k8s_node12_ns }}", sd: "{{ k8s_node12_sd }}" }
+            - { id: "{{ k8s_node13_id }}", hn: "{{ k8s_node13_hn }}", cpu: "{{ k8s_node13_cpu }}", mem: "{{ k8s_node13_mem }}", bridge: "{{ k8s_node13_bridge }}", gw: "{{ k8s_node13_gw }}", ip: "{{ k8s_node13_ip }}", sn: "{{ k8s_node13_sn }}", ns: "{{ k8s_node13_ns }}", sd: "{{ k8s_node13_sd }}" }
+
+      - name: Setting the VLAN Tags for the VMs.
+        shell: >
+            qm set {{ item.id }}
+            --net0 "virtio,bridge={{ item.bridge }},tag={{ item.vlan }}"
+        with_items:
+            - { id: "{{ k8s_master01_id }}", bridge: "{{ k8s_master01_bridge }}", vlan: "{{ k8s_master01_vlan }}" }
+            - { id: "{{ k8s_master02_id }}", bridge: "{{ k8s_master02_bridge }}", vlan: "{{ k8s_master02_vlan }}" }
+            - { id: "{{ k8s_master03_id }}", bridge: "{{ k8s_master03_bridge }}", vlan: "{{ k8s_master03_vlan }}" }
+            - { id: "{{ k8s_node1_id }}", bridge: "{{ k8s_node1_bridge }}", vlan: "{{ k8s_node1_vlan }}" }
+            - { id: "{{ k8s_node2_id }}", bridge: "{{ k8s_node2_bridge }}", vlan: "{{ k8s_node2_vlan }}" }
+            - { id: "{{ k8s_node3_id }}", bridge: "{{ k8s_node3_bridge }}", vlan: "{{ k8s_node3_vlan }}" }
+            - { id: "{{ k8s_node4_id }}", bridge: "{{ k8s_node4_bridge }}", vlan: "{{ k8s_node4_vlan }}" }
+            - { id: "{{ k8s_node5_id }}", bridge: "{{ k8s_node4_bridge }}", vlan: "{{ k8s_node4_vlan }}" }
+            - { id: "{{ k8s_node6_id }}", bridge: "{{ k8s_node4_bridge }}", vlan: "{{ k8s_node4_vlan }}" }
+            - { id: "{{ k8s_node7_id }}", bridge: "{{ k8s_node4_bridge }}", vlan: "{{ k8s_node4_vlan }}" }
+            - { id: "{{ k8s_node8_id }}", bridge: "{{ k8s_node4_bridge }}", vlan: "{{ k8s_node4_vlan }}" }
+            - { id: "{{ k8s_node9_id }}", bridge: "{{ k8s_node4_bridge }}", vlan: "{{ k8s_node4_vlan }}" }
+            - { id: "{{ k8s_node10_id }}", bridge: "{{ k8s_node4_bridge }}", vlan: "{{ k8s_node4_vlan }}" }
+            - { id: "{{ k8s_node11_id }}", bridge: "{{ k8s_node4_bridge }}", vlan: "{{ k8s_node4_vlan }}" }
+            - { id: "{{ k8s_node12_id }}", bridge: "{{ k8s_node4_bridge }}", vlan: "{{ k8s_node4_vlan }}" }
+            - { id: "{{ k8s_node13_id }}", bridge: "{{ k8s_node4_bridge }}", vlan: "{{ k8s_node4_vlan }}" }
+
+        when:
+            - k8s_master01_vlan is defined
+            - k8s_master01_vlan|length != 0
+            - k8s_master02_vlan is defined
+            - k8s_master02_vlan|length != 0
+            - k8s_master03_vlan is defined
+            - k8s_master03_vlan|length != 0
+            - k8s_node1_vlan is defined
+            - k8s_node1_vlan|length != 0
+            - k8s_node2_vlan is defined
+            - k8s_node2_vlan|length != 0
+            - k8s_node3_vlan is defined
+            - k8s_node3_vlan|length != 0
+            - k8s_node4_vlan is defined
+            - k8s_node4_vlan|length != 0
+            - k8s_node5_vlan is defined
+            - k8s_node5_vlan|length != 0
+            - k8s_node6_vlan is defined
+            - k8s_node6_vlan|length != 0
+            - k8s_node7_vlan is defined
+            - k8s_node8_vlan|length != 0
+            - k8s_node9_vlan is defined
+            - k8s_node9_vlan|length != 0
+            - k8s_node10_vlan is defined
+            - k8s_node10_vlan|length != 0
+            - k8s_node11_vlan is defined
+            - k8s_node11_vlan|length != 0
+            - k8s_node12_vlan is defined
+            - k8s_node12_vlan|length != 0
+            - k8s_node13_vlan is defined
+            - k8s_node13_vlan|length != 0
+
+      - name: Importing the qcow2 image as a disk.
+        shell: qm importdisk {{ item.id }} {{ qcow2_download_location }}image.qcow2 {{ item.stg }}
+        with_items: "{{ id_stg_list }}"
+
+      - name: Configuring the VM Hardware.
+        shell: qm set {{ item.id }}
+               --scsihw virtio-scsi-pci
+               --scsi0 {{ item.stg }}:vm-{{ item.id }}-disk-0
+               --ide2 {{ item.stg }}:cloudinit
+               --serial0 /dev/tty0
+               --boot c --bootdisk scsi0
+        with_items: "{{ id_stg_list }}"
+
+
+      - name: Resizing the disk.
+        shell: qm resize {{ item.id }} scsi0 {{ item.size }}
+        with_items:
+            - { id: "{{ k8s_master01_id }}", size: "{{ k8s_master01_size }}" }
+            - { id: "{{ k8s_master02_id }}", size: "{{ k8s_master02_size }}" }
+            - { id: "{{ k8s_master03_id }}", size: "{{ k8s_master03_size }}" }
+            - { id: "{{ k8s_node1_id }}", size: "{{ k8s_node1_size }}" }
+            - { id: "{{ k8s_node2_id }}", size: "{{ k8s_node2_size }}" }
+            - { id: "{{ k8s_node3_id }}", size: "{{ k8s_node3_size }}" }
+            - { id: "{{ k8s_node4_id }}", size: "{{ k8s_node4_size }}" }
+            - { id: "{{ k8s_node5_id }}", size: "{{ k8s_node4_size }}" }
+            - { id: "{{ k8s_node6_id }}", size: "{{ k8s_node4_size }}" }
+            - { id: "{{ k8s_node7_id }}", size: "{{ k8s_node4_size }}" }
+            - { id: "{{ k8s_node8_id }}", size: "{{ k8s_node4_size }}" }
+            - { id: "{{ k8s_node9_id }}", size: "{{ k8s_node4_size }}" }
+            - { id: "{{ k8s_node10_id }}", size: "{{ k8s_node4_size }}" }
+            - { id: "{{ k8s_node11_id }}", size: "{{ k8s_node4_size }}" }  
+            - { id: "{{ k8s_node12_id }}", size: "{{ k8s_node4_size }}" }
+            - { id: "{{ k8s_node13_id }}", size: "{{ k8s_node4_size }}" }
+        
+      - name: Starting the VMs.
+        shell: qm start {{ item }}
+        with_items: "{{ id_list }}"
